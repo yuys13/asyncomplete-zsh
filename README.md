@@ -15,6 +15,7 @@ Plug 'yuys13/asyncomplete-zsh.vim'
 call asyncomplete#register_source({
       \ 'name': 'zsh',
       \ 'allowlist': ['zsh'],
+      \ 'triggers': {'*': ['-']},
       \ 'completor': function('asyncomplete#sources#zsh#completor')
       \ })
 ```
