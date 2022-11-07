@@ -32,6 +32,17 @@ endfunction
 
 function! s:callback(channel, opt, ctx, startcol) abort
   let l:words= []
+
+  " workaround
+  if a:ctx['typed'] =~# '-'
+    if ch_status(a:channel, {'part': 'out'}) ==# 'buffered'
+      let l:line = trim(ch_read(a:channel))
+      let l:line = substitute(l:line, '^' . a:ctx['typed'], '', '')
+      let l:pieces = split(l:line, ' -- ')
+      call add(l:words, l:pieces[0])
+    endif
+  endif
+
   while ch_status(a:channel, {'part': 'out'}) ==# 'buffered'
     let l:line = ch_read(a:channel)
     let l:pieces = split(l:line, ' -- ')
