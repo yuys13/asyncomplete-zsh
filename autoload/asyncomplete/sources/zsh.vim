@@ -14,13 +14,17 @@ function! asyncomplete#sources#zsh#completor(opt, ctx) abort
   if has('nvim')
     let l:out = system(l:cmd)
 
-    let l:words = []
+    let l:matches = []
     for item in split(l:out, '\r\n')
       let l:pieces = split(item, ' -- ')
-      call add(l:words, l:pieces[0])
-    endfor
+      let l:candidate = {'word': l:pieces[0], 'dup': 1, 'menu': '[zsh]'}
 
-    let l:matches = map(l:words, '{"word": v:val, "dup": 1, "icase": 1, "menu": "[zsh]"}')
+      if len(l:pieces) > 1
+        let l:candidate['info'] = l:pieces[1]
+      endif
+
+      call add(l:matches, l:candidate)
+    endfor
 
     call asyncomplete#complete(a:opt['name'], a:ctx, l:startcol, l:matches)
     return
@@ -31,7 +35,7 @@ function! asyncomplete#sources#zsh#completor(opt, ctx) abort
 endfunction
 
 function! s:callback(channel, opt, ctx, startcol) abort
-  let l:words= []
+  let l:matches = []
 
   " workaround
   if a:ctx['typed'] =~# '-'
@@ -39,17 +43,27 @@ function! s:callback(channel, opt, ctx, startcol) abort
       let l:line = trim(ch_read(a:channel))
       let l:line = substitute(l:line, '^' . a:ctx['typed'], '', '')
       let l:pieces = split(l:line, ' -- ')
-      call add(l:words, l:pieces[0])
+      let l:candidate = {'word': l:pieces[0], 'dup': 1, 'menu': '[zsh]'}
+
+      if len(l:pieces) > 1
+        let l:candidate['info'] = l:pieces[1]
+      endif
+
+      call add(l:matches, l:candidate)
     endif
   endif
 
   while ch_status(a:channel, {'part': 'out'}) ==# 'buffered'
     let l:line = ch_read(a:channel)
     let l:pieces = split(l:line, ' -- ')
-    call add(l:words, l:pieces[0])
-  endwhile
+    let l:candidate = {'word': l:pieces[0], 'dup': 1, 'icase': 1, 'menu': '[zsh]'}
 
-  let l:matches = map(l:words, '{"word": v:val, "dup": 1, "icase": 1, "menu": "[zsh]"}')
+    if len(l:pieces) > 1
+      let l:candidate['info'] = l:pieces[1]
+    endif
+
+    call add(l:matches, l:candidate)
+  endwhile
 
   call asyncomplete#complete(a:opt['name'], a:ctx, a:startcol, l:matches)
 endfunction
